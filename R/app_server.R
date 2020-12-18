@@ -113,7 +113,7 @@ app_server <- function( input, output, session ) {
   cols_to_remove_from_trips_table <- c("start_fmt_time0", "start_local_dt_timezone", "start_fmt_time",
                                        "end_fmt_time0", "end_local_dt_timezone", "end_fmt_time", 
                                        "end_loc_coordinates", "start_loc_coordinates", 
-                                       "duration", "distance", "geometry", "source")
+                                       "duration", "distance", "geometry", "source", "cleaned_trip")
   
   observeEvent(data_r$click, {
     callModule(mod_DT_server, "DT_ui_participants", 
@@ -132,15 +132,15 @@ app_server <- function( input, output, session ) {
   # 2) which columns to remove to pass to the map and show up in the map popups
 
   # data_r$trips_with_trajectories %>% colnames() %>% dput()
-  
+  map_remove_cols = c("start_fmt_time0", "start_local_dt_timezone", "start_local_time",
+              "end_fmt_time0", "end_local_dt_timezone", "end_local_time",
+              "end_loc_coordinates", "start_loc_coordinates", "duration", "distance",
+              "location_points", "source", "user_id", "cleaned_trip")
   cols_to_include_in_map_filter <- reactive({
     data_r$trips_with_trajectories %>%
     colnames() %>%
     # specify columns to remove here
-    setdiff(c("start_fmt_time0", "start_local_dt_timezone", "start_local_time", 
-              "end_fmt_time0", "end_local_dt_timezone", "end_local_time", 
-              "end_loc_coordinates", "start_loc_coordinates", "duration", "distance", 
-              "location_points", "source"))
+    setdiff(map_remove_cols)
     })
     
   filtered_trips <- 

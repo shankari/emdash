@@ -159,7 +159,14 @@ summarise_trips = function(participants, trips) {
     ), by = user_id] %>%
     .[, n_days := round(as.numeric(difftime(last_trip_datetime, first_trip_datetime, units = "days")), 1)]
   
-  merge(participants, summ_trips, by = "user_id", all.x = TRUE)
+  unconfirmed_summ <- trips %>%
+    sf::st_drop_geometry(.) %>%
+    data.table::setDT(.) %>%
+     .[is.na(mode_confirm), .(unconfirmed = .N), by = user_id]
+
+  merge(participants, summ_trips, by = "user_id", all.x = TRUE) %>%
+    merge(., unconfirmed_summ, by="user_id", all.x = TRUE) %>%
+      .[is.na(unconfirmed), unconfirmed := 0]
 }
 
 #' Create a summary of server calls in data.table format.
