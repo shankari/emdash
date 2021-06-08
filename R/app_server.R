@@ -148,7 +148,7 @@ app_server <- function(input, output, session) {
               "end_loc_coordinates", "start_loc_coordinates", "duration", "distance",
               "location_points", "source", "user_id", "cleaned_trip")
   cols_to_include_in_map_filter <- reactive({
-    data_r$trips_with_trajectories %>%
+    data_r$trips %>%
     colnames() %>%
     # specify columns to remove here
     setdiff(map_remove_cols)
@@ -158,7 +158,7 @@ app_server <- function(input, output, session) {
     callModule(
       module = esquisse::filterDF,
       id = "filtering",
-      data_table = reactive(anonymize_uuid_if_required(data_r$trips_with_trajectories)),
+      data_table = reactive(anonymize_uuid_if_required(data_r$trips)),
       data_name = reactive("data"),
       data_vars = cols_to_include_in_map_filter, # the map filter uses start_fmt_time and end_fmt_time (UTC time)
       drop_ids = FALSE
