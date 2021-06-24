@@ -12,6 +12,7 @@
 #' @export
 #' @importFrom shiny shinyApp
 #' @importFrom golem with_golem_options
+
 run_app <- function(mongo_url, config_file, ...) {
   if (!missing(mongo_url)) {
     checkmate::assert_string(mongo_url)
@@ -31,7 +32,8 @@ run_app <- function(mongo_url, config_file, ...) {
     "emdash.cols_to_remove_from_trips_table" = config$cols_to_remove_from_trips_table,
     "emdash.cols_to_remove_from_map_popup" = config$cols_to_remove_from_map_popup,
     "emdash.col_labels_for_participts" = config$col_labels_for_participts,
-    "emdash.anon_locations" = config$anon_locations
+    "emdash.anon_locations" = config$anon_locations,
+    'emdash.supplementary_tables' = config$supplementary_tables
   )
 
   app <- with_golem_options(

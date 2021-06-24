@@ -15,7 +15,7 @@ default:
   
  cols_to_remove_from_trips_table:
   - start_fmt_time0 
-  - start_local_dt_timezone"
+  - start_local_dt_timezone
   - start_fmt_time
   - end_fmt_time0
   - end_local_dt_timezone
@@ -66,6 +66,14 @@ default:
    last_put_call:  last data upload
    first_diary_call: first app launch
    last_diary_call:  last app launch
+   
+ supplementary_tables:
+   - Checkinout:
+       tab_name: "Bike Check in"
+   # - PolarBear:
+   #     tab_name: "Polar Bear"
+   
+  
   
 
 

@@ -125,15 +125,45 @@ app_server <- function(input, output, session) {
 
   observeEvent(data_r$click, {
     callModule(mod_DT_server, "DT_ui_participants",
-      data = data_r$participants %>%
-        dplyr::select(-dplyr::any_of(getOption("emdash.cols_to_remove_from_participts_table"))) %>%
-        data.table::setnames(originalColumnNames, new_column_names, skip_absent = TRUE)
+               data = data_r$participants %>%
+                 dplyr::select(-dplyr::any_of(getOption("emdash.cols_to_remove_from_participts_table"))) %>%
+                 data.table::setnames(originalColumnNames, new_column_names, skip_absent = TRUE)
     )
     callModule(mod_DT_server, "DT_ui_trips",
-      data = data_r$trips %>%
-        dplyr::select(-dplyr::any_of(getOption("emdash.cols_to_remove_from_trips_table"))) %>%
-        sf::st_drop_geometry()
+               data = data_r$trips %>%
+                 dplyr::select(-dplyr::any_of(getOption("emdash.cols_to_remove_from_trips_table"))) %>%
+                 sf::st_drop_geometry()
     )
+    
+    tableList <- getOption('emdash.supplementary_tables')
+
+    # For each supplementary table, append a new tabPanel and run the server function
+    # that specifies table behavior
+    for (t in tableList){
+      table_type <- names(t)
+      table_title <- t[[table_type]]$tab_name
+      
+      new_tab <-  tabPanel(
+          status = "primary",
+          title = table_title,
+          value = table_type,
+          mod_DT_ui(id = paste0("DT_ui_",table_type))
+        )
+      
+      appendTab(
+        inputId = 'tabs',
+        tab = new_tab,
+        select = FALSE,
+        menuName = NULL,
+        session = getDefaultReactiveDomain()
+      )
+      
+      # Run mod_DT_server using data for the current table
+      callModule(module = mod_DT_server,
+                 id = paste0("DT_ui_",table_type),
+                 data = data_r[[table_type]] )
+    }
+    
   })
 
   # Maps --------------------------------------------------------------------
