@@ -10,7 +10,8 @@ app_server <- function(input, output, session) {
   # prepare data ------------------------------------------------------------
   cons <- connect_stage_collections(url = getOption("emdash.mongo_url"))
   data_r <- callModule(mod_load_data_server, "load_data_ui", cons)
-
+  data_geogr <- callModule(mod_load_trips_server,"load_trips_ui",cons)
+  
   # Side bar ----------------------------------------------------------------
 
   # Dashboard ---------------------------------------------------------------
@@ -64,7 +65,7 @@ app_server <- function(input, output, session) {
   callModule(
     mod_ggplotly_server,
     "ggplotly_ui_trip_trend",
-    utils_plot_trip_trend(data_r$trips)
+    utils_plot_trip_trend(data_geogr$trips)
   )
   callModule(
     mod_ggplotly_server,
@@ -101,7 +102,7 @@ app_server <- function(input, output, session) {
     }
     if (input$tabs == "trips") {
       data_esquisse$data <-
-        data_r$trips %>%
+        data_geogr$trips %>%
         drop_list_columns() %>%
         sf::st_drop_geometry()
     }
@@ -118,7 +119,7 @@ app_server <- function(input, output, session) {
   #
   # use these to generate lists of columns to inform which columns to remove
   # data_r$participants %>% colnames() %>% dput()
-  # data_r$trips %>% colnames() %>% dput()
+  # data_geogr$trips %>% colnames() %>% dput()
   # POSSIBLE LINE: allNames[!(allNames %in% config$column_names)]
   # cols_to_remove_from_participts_table <- c("first_trip_datetime",
   #                                            "last_trip_datetime")
@@ -129,9 +130,12 @@ app_server <- function(input, output, session) {
         dplyr::select(-dplyr::any_of(getOption("emdash.cols_to_remove_from_participts_table"))) %>%
         data.table::setnames(originalColumnNames, new_column_names, skip_absent = TRUE)
     )
+  })
+    
+  observeEvent(data_geogr$click, {
     callModule(mod_DT_server, "DT_ui_trips",
-      data = data_r$trips %>%
-        dplyr::select(-dplyr::any_of(getOption("emdash.cols_to_remove_trips_table"))) %>%
+      data = data_geogr$trips %>%
+        dplyr::select(-dplyr::any_of(getOption("emdash.cols_to_remove_from_trips_table"))) %>%
         sf::st_drop_geometry()
     )
   })
@@ -147,18 +151,19 @@ app_server <- function(input, output, session) {
               "end_fmt_time0", "end_local_dt_timezone", "end_local_time",
               "end_loc_coordinates", "start_loc_coordinates", "duration", "distance",
               "location_points", "source", "user_id", "cleaned_trip")
+
   cols_to_include_in_map_filter <- reactive({
-    data_r$trips %>%
-    colnames() %>%
-    # specify columns to remove here
-    setdiff(map_remove_cols)
-    })
-    
-  filtered_trips <- 
+    data_geogr$trips_with_trajectories %>%
+      colnames() %>%
+      # specify columns to remove here
+      setdiff(map_remove_cols)
+  })
+
+  filtered_trips <-
     callModule(
       module = esquisse::filterDF,
       id = "filtering",
-      data_table = reactive(anonymize_uuid_if_required(data_r$trips)),
+      data_table = reactive(anonymize_uuid_if_required(data_geogr$trips_with_trajectories)),
       data_name = reactive("data"),
       data_vars = cols_to_include_in_map_filter, # the map filter uses start_fmt_time and end_fmt_time (UTC time)
       drop_ids = FALSE
