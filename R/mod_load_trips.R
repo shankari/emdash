@@ -94,16 +94,16 @@ mod_load_trips_server <- function(input, output, session, cons) {
                    )
                    message("Finished loading trips")
                    
-                   message("About to load locations")
-                   data_geogr$locations <- tidy_cleaned_locations(query_cleaned_locations_by_timestamp(cons,input$dates))
-                   message("Finished loading locations")
-
-                   message("About to create trajectories within trips")
-                   data_geogr$trips_with_trajectories <- generate_trajectories(data_geogr$trips,
-                     data_geogr$locations,
-                     project_crs = get_golem_config("project_crs")
-                   )
-                   message("Finished creating trajectories within trips")
+#                    message("About to load locations")
+#                    data_geogr$locations <- tidy_cleaned_locations(query_cleaned_locations_by_timestamp(cons,input$dates))
+#                    message("Finished loading locations")
+# 
+#                    message("About to create trajectories within trips")
+#                    data_geogr$trips_with_trajectories <- generate_trajectories(data_geogr$trips,
+#                      data_geogr$locations,
+#                      project_crs = get_golem_config("project_crs")
+#                    )
+#                    message("Finished creating trajectories within trips")
                    
                    # output column names into R
                    # data_geogr$trips %>% colnames() %>% dput()
