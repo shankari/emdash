@@ -53,9 +53,9 @@ app_server <- function(input, output, session) {
     icon = icon("calendar-plus")
   )
 
-  # Dashboard - boxes - end ----------
-
-  # Dashboard - plots - start ----------
+  # # Dashboard - boxes - end ----------
+  # 
+  # # Dashboard - plots - start ----------
   callModule(
     mod_ggplotly_server,
     "ggplotly_ui_signup_trend",
@@ -136,33 +136,102 @@ app_server <- function(input, output, session) {
     )
     
     tableList <- getOption('emdash.supplementary_tables')
-
+    
     # For each supplementary table, append a new tabPanel and run the server function
     # that specifies table behavior
     for (t in tableList){
       table_type <- names(t)
       table_title <- t[[table_type]]$tab_name
       
-      new_tab <-  tabPanel(
+      # If the table is Bike Check In, use dtedit
+      if (table_type == 'Checkinout') {
+        
+        # Define the callback functions used by dtedit
+        #' Insert a row. "Create"
+        #' @param data the data including your inserted row
+        #' @param row the row where you made the change
+        insert_callback <- function(data, row) {
+          db_insert(cons,"Checkinout",data[row,])
+          return(data)
+        }
+        
+        #' Update a row
+        #' @param data the data including your updated row
+        update_callback <- function(data, olddata, row) {
+          db_update(cons,"Checkinout",data[row,])
+          data
+        }
+        
+        #' Delete a row
+        delete_callback <- function(data, row) {
+          db_delete(cons,"Checkinout",data[row,])
+          return(data[-row, ])
+        }
+        
+        # Make status a list so you can set false as one of the options in the event of all trues
+        data_for_dtedit <- data_r[[table_type]]
+        data_for_dtedit$status <- as.factor(data_for_dtedit$status)
+        
+        editable_table_tab <-  tabPanel(
           status = "primary",
           title = table_title,
           value = table_type,
-          mod_DT_ui(id = paste0("DT_ui_",table_type))
+          uiOutput(outputId = paste0("DTedit_ui_",table_type))  # Maybe Later: mod_DTedit_ui(id = paste0("DTedit_ui_",table_type)) #
         )
-      
-      appendTab(
-        inputId = 'tabs',
-        tab = new_tab,
-        select = FALSE,
-        menuName = NULL,
-        session = getDefaultReactiveDomain()
-      )
-      
-      # Run mod_DT_server using data for the current table
-      callModule(module = mod_DT_server,
-                 id = paste0("DT_ui_",table_type),
-                 data = data_r[[table_type]] )
-    }
+        
+        appendTab(
+          inputId = 'tabs',
+          tab = editable_table_tab,
+          select = FALSE,
+          menuName = NULL,
+          session = getDefaultReactiveDomain()
+        )
+
+        DTedit::dtedit(input, output,
+                       name = paste0("DTedit_ui_",table_type),
+                       thedata = data_for_dtedit,
+                       edit.cols = c('status'),
+                       edit.label.cols = c('status'),
+                       input.types = c(status = "selectInput"),
+                       input.choices = list(status = c('TRUE','FALSE')),
+                       view.cols = c('user_id','status', 'bikeLabel','ts','Checkout_time'),
+                       callback.update = update_callback,   # defined in utils_update_insert_delete.R
+                       callback.insert = insert_callback,
+                       callback.delete = delete_callback,
+                       show.insert = FALSE,
+                       show.update = FALSE,
+                       show.copy = FALSE,
+                       label.delete = 'Delete Row',
+                       datatable.options = list(
+                         scrollX = TRUE,
+                         pageLength = 50,
+                         dom = "Bfrtip",
+                         buttons = c("copy", "csv", "excel", "pdf", "print", "colvis")
+                       )
+                     ) 
+      }  
+      # For other supplementary tables, use mod_DT  
+       else {
+         browser
+        regular_tab <-  tabPanel(
+          status = "primary",
+          title = table_title,
+          value = table_type,
+          mod_DT_ui(id = paste0("DT_ui_",table_type)) 
+        )
+        appendTab(
+          inputId = 'tabs',
+          tab = regular_tab,
+          select = FALSE,
+          menuName = NULL,
+          session = getDefaultReactiveDomain()
+        ) 
+        # Run mod_DT_server using data for the current table
+        callModule(module = mod_DT_server,
+                   id = paste0("DT_ui_",table_type),
+                   data = data_r[[table_type]] )
+       }
+      }
     
   })
 

@@ -89,14 +89,14 @@ app_ui <- function(request) {
                       collapsible = TRUE,
                       width = 12,
                       esquisserUI(
-                        id = "esquisse", 
+                        id = "esquisse",
                         header = FALSE, # dont display gadget title
                         choose_data = FALSE # dont display button to change data
                       ),
-                      
+
                       # Override the default font size in esquisse with CSS
                       tags$style(".container-drag-source, .box-dad {font-size: 14px;}")
-                      ), 
+                      ),
                   
                   fluidRow(
                     tabBox(
@@ -139,7 +139,7 @@ app_ui <- function(request) {
         )
       )
     )
-  )
+  ) ################################################################
 }
 
 #' Add external Resources to the Application
